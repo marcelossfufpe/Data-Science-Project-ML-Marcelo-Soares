@@ -4,6 +4,6 @@ Devido a limitações de tamanho ao realizar push para o GitHub, os bancos de da
 
 Para obter os arquivos, por favor, acesse o seguinte link para download via Google Drive:
 
-[Baixar Bancos de Dados]([LINK_DO_DRIVE_AQUI](https://drive.google.com/drive/folders/1ipSSYLz24dTBVmivXk9XBgWLDgz2AhyX?usp=sharing))
+[Baixar Bancos de Dados](https://drive.google.com/drive/folders/1ipSSYLz24dTBVmivXk9XBgWLDgz2AhyX?usp=sharing)
 
 Certifique-se de baixar os arquivos e colocá-los na pasta correta do seu projeto antes de executar o código.
