@@ -1,0 +1,431 @@
+---
+title: "Análise de Predição de Campeões de Futebol Utilizando Machine Learning"
+author: "Marcelo soares"
+date: "25/09/2024"
+output:
+  html_document: default
+  word_document: default
+  pdf_document: default
+---
+
+# Introdução
+
+    A motivação deste estudo foi entender como estatísticas no futebol podem ser utilizadas para extrair informações preditivas. O objetivo inicial foi levantar quais dados são importantes para predizer o próximo campeão das principais ligas de futebol Europeias, utilizando o database European Soccer Database, do Kaggle. Futuramente, este modelo pode ser aprimorado com métricas mais detalhadas, como posse de bola, estilo de jogo,média de público em jogos em casa, e número de jogadores lesionados. Este trabalho usa dois algoritmos de aprendizado supervisionado: Random Forest e K-NN, para predizer se um time será campeão.
+
+# Fundamentos Teóricos e Metodológicos
+
+  **Random Forest** é um método de aprendizado baseado em árvores de decisão, onde várias árvores são criadas e os resultados são combinados para melhorar a acurácia. O modelo é robusto contra *overfitting*, especialmente quando há muitas features disponíveis.
+
+  **K-NN (K-Nearest Neighbors)** classifica novos pontos de dados com base na proximidade a outros pontos, utilizando a distância euclidiana. É um método simples, mas pode ser menos eficiente quando há muitas variáveis.
+
+\newpage
+# Aplicação
+
+### 1. Pré-Processamento (Limpeza e Preparação dos dados)
+
+    A preparação dos dados foi realizada em várias etapas para garantir que apenas informações relevantes fossem mantidas e que novas features úteis fossem adicionadas.
+   
+    Inicialmente, apenas as ligas de interesse foram selecionadas: Inglaterra, Itália e Alemanha, abrangendo as temporadas de 2008/2009 a 2015/2016.
+    
+    Em seguida, as partidas foram filtradas para incluir apenas aquelas das ligas selecionadas. As features mais importantes foram escolhidas, resultando em um dataframe contendo as seguintes colunas: season, date, league_id, home_team_id, away_team_id, home_team_goal, away_team_goal. Essa filtragem garantiu que o conjunto de dados fosse mais manejável e focado. 
+    
+    As informações dos times foram unificadas com os dados das partidas, formando um dataframe que indicava quais times participaram de cada jogo e quantos gols cada um marcou.
+    A partir do dataframe unificado, foram calculados os gols marcados e sofridos por cada time, tanto em casa quanto fora. Novas colunas foram criadas para representar esses totais:
+        - Gols Marcados em casa
+        - Gols sofridos em casa
+        - Gols marcados fora de casa
+        - Gols sofridos fora de casa 
+    Um cálculo foi realizado para determinar quantos pontos cada time acumulou ao longo da temporada. Isso foi feito comparando o resultado de cada partida e atribuindo pontos com base no desempenho:
+        3 pontos para uma vitória,
+        1 ponto para um empate,
+        0 pontos para uma derrota.
+    Com base nessa pontuação, uma nova coluna chamada is_champion foi adicionada ao dataframe. Essa coluna indica se um time foi campeão (1) ou não (0) ao final da temporada, proporcionando uma visão clara de quais times se destacaram.
+    
+    Essas etapas de limpeza e preparação dos dados foram fundamentais para garantir que a análise subsequente fosse precisa e informativa, facilitando a exploração do desempenho dos times nas ligas de interesse.
+
+
+
+### 2. Aplicação do Modelo
+  ***Configuração***
+    
+    Para a análise, foram construídos dois modelos de Machine Learning: Random Forest e KNN (k-nearest neighbors).
+
+    Os dados foram divididos em 80% para treinamento e 20% para teste, utilizando o parâmetro random_state=123. O random_state garante a reprodutibilidade dos resultados ao controlar a aleatoriedade na divisão dos dados. Isso significa que, ao usar o mesmo valor para random_state, a divisão dos dados será a mesma a cada execução, permitindo comparações consistentes entre diferentes execuções do modelo.
+    A variável is_champion foi escolhida como alvo de estudo, enquanto os gols marcados e sofridos (tanto em casa quanto fora) foram utilizados como critérios de predição.
+    Os modelos escolhidos foram Random Fores e K-nn. A escolha do Random Forest foi fundamentada em sua robustez e capacidade de lidar com overfitting, enquanto o K-nn foi selecionado pela sua simplicidade e eficácia em classificações, apesar de ser suscetível a underfitting.
+  
+### 3. Avaliação do Modelo
+
+    Variáveis Importantes:
+    As variáveis mais importantes para ambos os modelos, listadas da mais para a menos significativa, foram Gols sofridos em casa, Gols marcados em casa, Gols sofridos fora de casa e Gols marcados fora de casa: 
+    O modelo Random Forest foi ajustado (tuned), mas não houve diferença significativa nos resultados, já que a acurácia e a curva de aprendizado permaneceram semelhantes.
+
+
+    
+``` {r, echo = FALSE, fig.width = 8, fig.height = 6, out.width="100%"}
+library(ggplot2)
+
+importance_df <- data.frame(
+  Feature = c('Gols Sofridos em Casa', 'Gols Marcados em Casa', 'Gols Sofridos Fora de Casa', 'Gols Marcados Fora de Casa'),
+  Importance = c(0.48, 0.42, 0.06, 0.04)
+)
+
+ggplot(importance_df, aes(x=reorder(Feature, Importance), y=Importance)) +
+  geom_bar(stat="identity", fill="steelblue") +
+  coord_flip() +
+  labs(title="Importância das Variáveis no Modelo Random Forest e K-nn",
+       x="Variável",
+       y="Importância",
+       fill="Gráfico 1 - Importância das Features do Modelo") +
+  theme_minimal() +
+  theme(legend.position="bottom",
+        legend.title = element_text(size = 12), 
+        legend.text = element_text(size = 10),
+        plot.title = element_text(hjust = 0.5),
+        plot.margin = margin(t = 20, r = 20, b = 20, l = 20))
+``` 
+
+    
+      - Na matriz de confusão, os resultados foram:
+      Random Forest:  i)   1640 verdadeiros não-campeões
+                      ii)  3 não-campeões classificados como campeões
+                      iii) 2 campeões classificados como não campeões
+                      iv)  22 verdadeiros campeões
+      Knn: i)   1632 verdadeiros não-campeões
+           ii)  11 não campeões classificados como campeões
+           iii) 12 campeões classificados como não campeões
+           iv)  12 verdadeiros campeões    
+  
+    
+``` {r, echo = FALSE,fig.width = 20, fig.height = 6, out.width="100%"}
+library(ggplot2)
+library(gridExtra)
+library(grid)
+
+confusion_matrix <- data.frame(
+  Actual = c("Não-Campeão", "Não-Campeão", "Campeão", "Campeão"),
+  Prediction = c("Não-Campeão", "Campeão", "Campeão", "Não-Campeão"), 
+  Count = c(1640, 3, 22, 2)
+)
+
+plotRf <- ggplot(confusion_matrix, aes(y=Actual, x=Prediction, fill=Count)) +
+  geom_tile() +
+  geom_text(aes(label=Count), color="white", size=5) +
+  scale_fill_gradient(low="lightblue", high="darkblue") +
+  labs(title="Matriz de Confusão do Modelo Random Forest",
+       y="Valor Real",
+       x="Previsão",
+       fill="Gráfico 2 - Matriz Confusão do Modelo Random Forest") +
+  theme(legend.position="none",
+        legend.title = element_text(size = 12), 
+        legend.text = element_text(size = 10),
+        plot.title = element_text(hjust = 0.5),
+        plot.margin = margin(t = 20, r = 20, b = 20, l = 20))
+
+confusion_matrixKnn <- data.frame(
+  Actual = c("Não-Campeão", "Não-Campeão", "Campeão", "Campeão"),
+  Prediction = c("Não-Campeão", "Campeão", "Campeão", "Não-Campeão"), 
+  Count = c(1632, 11, 12, 12)
+)
+
+plotKnn <- ggplot(confusion_matrixKnn, aes(y=Actual, x=Prediction, fill=Count)) +
+  geom_tile() +
+  geom_text(aes(label=Count), color="white", size=5) +
+  scale_fill_gradient(low="lightblue", high="darkblue") +
+  labs(title="Matriz de Confusão do Modelo K-nn",
+       y="Valor Real",
+       x="Previsão",
+       fill="Gráfico 3 - Matriz Confusão do Modelo K-nn") +
+  theme(legend.position="none",
+        legend.title = element_text(size = 12), 
+        legend.text = element_text(size = 10),
+        plot.title = element_text(hjust = 0.5),
+        plot.margin = margin(t = 20, r = 20, b = 20, l = 20))
+
+legend_text <- textGrob("Gráfico 2 - Matriz Confusão para Random Forest (Esq) e K-nn (Dir)", gp = gpar(fontsize = 12))
+
+grid.arrange(arrangeGrob(plotRf, plotKnn, ncol = 2), 
+             legend_text,
+             ncol=1, 
+             heights = c(8, 1), 
+             padding = unit(1, "cm"))
+``` 
+
+***Box-Plot: Comparação de Times Campeões e Não-Campeões***
+
+``` {r, echo = FALSE, warning=FALSE, message=FALSE,fig.width = 8, fig.height = 6, out.width="100%"}
+# Carregar as bibliotecas necessárias
+library(dplyr)
+library(gridExtra)
+library(grid)
+
+# Carregar o dataset de partidas
+matches <- read.csv('./Match.csv')
+
+# Carregar o dataset de times
+teams <- read.csv('./Team.csv')
+
+# Carregar o dataset de ligas
+leagues <- read.csv('./League.csv')
+
+# Selecionar ligas específicas
+selectedLeagues <- leagues %>% 
+  filter(name %in% c('England Premier League', 'Italy Serie A', 'Germany 1. Bundesliga'))
+
+selectedLeaguesId <- selectedLeagues$id
+
+# Filtrar partidas pelas ligas selecionadas
+filteredMatches <- matches %>% 
+  filter(league_id %in% selectedLeaguesId) %>%
+  select(season, date, home_team_api_id, away_team_api_id, home_team_goal, away_team_goal, league_id)
+
+selectedTeams <- teams %>%
+  select(team_api_id, team_long_name)
+
+
+# Unir informações dos times com as partidas (time da casa)
+mergedDataHome <- filteredMatches %>%
+  left_join(selectedTeams, by = c("home_team_api_id" = "team_api_id"))
+
+
+# Unir informações dos times com as partidas (time visitante)
+mergedData <- mergedDataHome %>%
+  left_join(selectedTeams, by = c("away_team_api_id" = "team_api_id"))
+
+# Função para calcular gols
+calculate_goals <- function(df) {
+  df <- df %>%
+    mutate(home_goals_scored = home_team_goal,
+           home_goals_conceded = away_team_goal,
+           away_goals_scored = away_team_goal,
+           away_goals_conceded = home_team_goal)
+  return(df)
+}
+
+# Aplicar a função de cálculo de gols
+mergedData <- calculate_goals(mergedData)
+
+mergedData <- mergedData %>%
+  rename(home_team_name = team_long_name.x, 
+         away_team_name = team_long_name.y)
+
+# Agrupar e somar os gols marcados e sofridos em casa
+homeGoal <- mergedData %>%
+  group_by(season, home_team_name) %>%
+  summarise(home_goals_scored = sum(home_goals_scored, na.rm = TRUE),
+            home_goals_conceded = sum(home_goals_conceded, na.rm = TRUE)) %>%
+  ungroup()
+
+# Agrupar e somar os gols marcados e sofridos fora
+awayGoals <- mergedData %>%
+  group_by(season, away_team_name) %>%
+  summarise(away_goals_scored = sum(away_goals_scored, na.rm = TRUE),
+            away_goals_conceded = sum(away_goals_conceded, na.rm = TRUE)) %>%
+  ungroup()
+
+# Renomear colunas para facilitar a junção
+homeGoal <- homeGoal %>% rename(team_name = home_team_name)
+awayGoals <- awayGoals %>% rename(team_name = away_team_name)
+
+# Combinar os gols de casa e fora em uma única tabela
+totalGoals <- full_join(homeGoal, awayGoals, by = c("season", "team_name"))
+
+# Somar os gols marcados e sofridos
+totalGoals <- totalGoals %>%
+  mutate(goals_scored = coalesce(home_goals_scored, 0) + coalesce(away_goals_scored, 0),
+         goals_conceded = coalesce(home_goals_conceded, 0) + coalesce(away_goals_conceded, 0))
+
+# Manter apenas as colunas de interesse
+totalGoals <- totalGoals %>%
+  select(season, team_name, goals_scored, goals_conceded)
+
+mergedData <- mergedData %>%
+  mutate(home_team_points = ifelse(home_team_goal > away_team_goal, 3,
+                                    ifelse(home_team_goal == away_team_goal, 1, 0)),
+         away_team_points = ifelse(away_team_goal > home_team_goal, 3,
+                                    ifelse(away_team_goal == home_team_goal, 1, 0)))
+
+# Agrupar por temporada e time para somar os pontos totais
+homePoints <- mergedData %>%
+  group_by(season, home_team_name) %>%
+  summarise(points = sum(home_team_points, na.rm = TRUE)) %>%
+  ungroup()
+
+awayPoints <- mergedData %>%
+  group_by(season, away_team_name) %>%
+  summarise(points = sum(away_team_points, na.rm = TRUE)) %>%
+  ungroup()
+
+# Renomear colunas para facilitar o merge
+homePoints <- homePoints %>% rename(team_name = home_team_name)
+awayPoints <- awayPoints %>% rename(team_name = away_team_name)
+
+# Combinar os pontos de casa e fora em uma única tabela
+totalPoints <- full_join(homePoints, awayPoints, by = c("season", "team_name")) %>%
+  mutate(totalPoints = coalesce(points.x, 0) + coalesce(points.y, 0)) %>%
+  select(season, team_name, totalPoints)
+
+# Identificar o time campeão de cada temporada
+champions <- totalPoints %>%
+  group_by(season) %>%
+  filter(totalPoints == max(totalPoints, na.rm = TRUE)) %>%
+  select(season, team_name) %>%
+  mutate(is_champion = 1)
+
+# Adicionar a coluna is_champion ao dataframe totalPoints
+totalPoints <- totalPoints %>%
+  left_join(champions %>% select(season, team_name, is_champion), by = c("season", "team_name")) %>%
+  mutate(is_champion = ifelse(is.na(is_champion), 0, is_champion)) %>%
+  select(season, team_name, totalPoints, is_champion)
+
+dfByGoalsAndChampion <- totalGoals %>%
+  left_join(totalPoints %>% select(season, team_name, is_champion), 
+            by = c("season", "team_name")) %>%
+  select(season, team_name, is_champion, goals_scored, goals_conceded)
+
+
+golsMarcados <- ggplot(dfByGoalsAndChampion, aes(x=factor(is_champion), y=goals_scored, fill=factor(is_champion))) +
+  geom_boxplot(show.legend = FALSE) +
+  labs(x="Não-Campeão(Esq) / Campeão(Dir)",
+       y="Gols Marcados",
+       fill="Gráfico 4 - BoxPlot Gols Marcados") +
+  theme_minimal() +
+ scale_fill_manual(values=c("0"="lightcoral", "1"="lightblue")) +
+ theme(
+    plot.title = element_text(size = 20, face = "bold"),
+    axis.title.x = element_text(size = 15, face="bold"),               
+    axis.title.y = element_text(size = 15),
+    legend.position="none",
+    legend.title = element_text(size = 12), 
+    legend.text = element_text(size = 10)
+  )
+golsSofridos <- ggplot(dfByGoalsAndChampion, aes(x=factor(is_champion), y=goals_conceded, fill=factor(is_champion))) +
+  geom_boxplot(show.legend = FALSE) +
+  labs(x="Não-Campeão(Esq) / Campeão(Dir)",
+       y="Gols Sofridos",
+       fill="Gráfico 5 - BoxPlot Gols Sofridos") +
+  theme_minimal() +
+ scale_fill_manual(values=c("0"="lightcoral", "1"="lightblue")) +
+ theme(
+    plot.title = element_text(size = 20, face = "bold"),
+    axis.title.x = element_text(size = 15, face="bold"),               
+    axis.title.y = element_text(size = 15),
+    legend.position="none",
+    legend.title = element_text(size = 12), 
+    legend.text = element_text(size = 10)           
+  )
+
+title <- textGrob("BoxPlot Distribuição de gols marcados e sofridos", gp = gpar(fontsize = 16, fontface = "bold"))
+legend_text <- textGrob("Gráfico 3 - BoxPlot dos Gols Marcados (Esq) e Sofridos (Dir)", gp = gpar(fontsize = 12))
+
+grid.arrange(
+  title,                              
+  arrangeGrob(golsMarcados, golsSofridos, ncol = 2),
+  legend_text,                        
+  ncol = 1,                           
+  heights = c(0.5, 8, 0.5)           
+)
+```
+
+***Comparação de Acurácia, Kappa e Aprendizado entre Modelos***
+
+    Random Forest: - Acurácia: 0.99
+                   - Kappa: 0.896
+                   - No gráfico de boundary, que visualiza a separação entre as classes (neste caso, times campeões e não campeões), o modelo conseguiu classificar eficientemente os times. No entanto, alguns times classificados como campeões ficaram na área de não campeões.
+    KNN:- Acurácia: 0.986
+        - Kappa: 0.50
+        - As curvas de aprendizado divergiram no final do processo, onde a training score subiu, enquanto a cross-validation diminuiu. Esse comportamento indica que o modelo está se ajustando demais aos dados de treinamento (overfitting), levando a uma performance pior em dados não vistos.
+
+```{r, echo = FALSE, fig.width = 8, fig.height = 6, out.width="100%"}
+# Carregar as bibliotecas necessárias
+library(ggplot2)
+library(tidyr)
+library(gridExtra)
+library(grid)
+
+# Criar um dataframe com os dados
+metrics <- data.frame(
+  Model = c("Random Forest", "KNN"),
+  Accuracy = c(0.99, 0.986),
+  Kappa = c(0.896, 0.50)
+)
+
+# Transformar o dataframe para o formato longo
+metrics_long <- metrics %>%
+  pivot_longer(cols = c(Accuracy, Kappa), names_to = "Metric", values_to = "Value")
+
+# Plotar o gráfico
+plot <- ggplot(metrics_long, aes(x = Model, y = Value, fill = Metric)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Modelo",
+       y = "Valor") +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set1") +
+  theme(legend.title = element_text(size = 12), 
+        legend.text = element_text(size = 10),
+        plot.title = element_text(hjust = 0.5),
+        plot.margin = margin(t = 20, r = 20, b = 20, l = 20))
+
+kappa_concordance <- data.frame(
+  Kappa = c("0 a 0.20", "0.21 a 0.39", "0.40 a 0.59", "0.60 a 0.79", "0.80 a 0.90", "0.91 a 1.0"),
+  Relação = c("Insignificante", "Mínima", "Fraca", 
+                  "Moderada", "Forte", "Quase Perfeita")
+)
+
+library(gridExtra)
+library(grid)
+
+# Criar a tabela com o tema e tamanho de fonte
+kappa_table <- tableGrob(kappa_concordance, 
+                          rows = NULL,
+                          theme = ttheme_default(
+                            core = list(fg_params = list(cex = 0.8)),
+                            colhead = list(fg_params = list(cex = 0.8)), 
+                            rowhead = list(fg_params = list(cex = 0.8))
+                          ))
+
+# Título e legenda
+title <- textGrob("Comparação de Métricas de Random Forest e K-nn", 
+                  gp = gpar(fontsize = 16, fontface = "bold"))
+legend_text <- textGrob(
+              "Gráfico 6 - Acurácia e Kappa dos Modelos de Aprendizado Random Forest e K-nn", 
+              gp = gpar(fontsize = 12, fontface = "italic"))
+
+# Combinar o título, gráfico e tabela
+grid.arrange(
+  title, 
+  arrangeGrob(plot, kappa_table, ncol = 2, widths = c(3, 1)),
+  legend_text,
+  ncol = 1,
+  heights = c(0.5, 8, 0.5)
+)
+
+```
+
+\newpage
+
+### Conclusão
+
+    O modelo de Random Forest apresentou uma acurácia de 0.997 e um coeficiente Kappa de 0.89, indicando um alto nível de concordância nas classificações feitas. Já o modelo K-NN teve uma acurácia de 0.98, mas com um Kappa mais baixo (0.5), sugerindo que as classificações corretas foram mais aleatórias.
+    A alta acurácia pode ser atribuída ao uso das variáveis Gols Sofridos e Gols marcados, que têm um impacto direto no resultado do jogo e são bons preditores de sucesso. No entanto, há indícios de overfitting no modelo de Random Forest, pois a acurácia é extremamente alta. O modelo pode não generalizar bem para novos dados.
+    Influência da Distribuição das Classes: A diferença de distribuição entre classes (com muito mais times não campeões do que campeões) pode ter influenciado o desempenho de ambos os modelos. Modelos tendem a ser mais propensos a prever a classe majoritária (não campeões, neste caso) em situações de desbalanceamento, o que pode resultar em uma menor acurácia na identificação da classe minoritária (campeões). Essa disparidade pode levar a uma matriz de confusão com muitos falsos negativos, como observado no KNN.
+    Essas análises demonstram a importância da escolha adequada de modelos, ajuste fino e consideração da distribuição de classes ao aplicar Machine Learning em problemas de classificação.
+    Para aprimorar os resultados, seria interessante incluir estatísticas mais detalhadas (como posse de bola, condições do time, etc., além de equilibrar a distribuição entre as classes campeão e não campeão) e verificar a robustez do modelo em relação à mudança dessas variáveis.
+
+\newpage
+### Contribuições da Equipe
+    
+    Marcelo José Soares - 100% (Escolha do database, pré-processamento e preparação dos dados, desenvolvimento do modelo, avaliação das métricas e resultados e interpretação das informações)
+  
+  
+### Referências
+
+    - [sklearn Random Forest Documentation]("https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html")
+    - [sklearn K-nn Documentacion]("https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html")
+    - [About Kappa]("https://edrone.me/pt/blog/concordancia-entre-anotadores")
+    - [Pre-processing and Predicting with Random Forest]("https://www.kaggle.com/code/yogi045/preprocess-and-predicting-using-random-forest")
+    - [Random Forest Algorithmn]("https://www.e2enetworks.com/blog/random-forest-algorithm-in-machine-learning-a-guide")
+    - [European Soccer Database]("https://www.kaggle.com/datasets/abdelrhmanragab/european-soccer-database")
+    - [IBM Knn]("https://www.ibm.com/topics/knn")
+    
+    
