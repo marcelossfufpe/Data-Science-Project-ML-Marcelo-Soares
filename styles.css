@@ -1,0 +1,37 @@
+table {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  border-collapse: collapse;
+}
+
+th, td {
+  font-size: 20px;
+  height: 20px;
+  border: 1px solid #ddd;
+  text-align: center;
+}
+
+th {
+  background-color: #f2f2f2;
+}
+
+td {
+  background-color: #ffffff;
+}
+
+p {
+  font-size: 0.8em;
+  color: gray;
+}
+
+.container-plots {
+  display: flex;
+  justify-content: space-between;
+}
+
+.div-plot-individual {
+	display: flex;
+	flex-direction: column;
+}
+
